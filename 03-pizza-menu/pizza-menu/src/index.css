@@ -183,6 +183,38 @@ body {
     background-color: #e9bb24;
 }
 
+@media only screen and (max-width: 61.25em) {
+    body {
+        padding: 2.4rem;
+    }
+
+    .header h1 {
+        font-size: 4.6rem;
+    }
+
+    .header h1::before, .header h1::after {
+        display: none;
+    }
+
+    .menu > p {
+        width: 100%;
+    }
+
+    .pizzas {
+        grid-template-columns: 1fr;
+        gap: 4rem;
+    }
+
+    .pizza img {
+        align-self: center;
+    }
+
+    .footer p {
+        text-align: center;
+        line-height: 1.6;
+    }
+}
+
 /*
 SPACING SYSTEM (px)
 2 / 4 / 8 / 12 / 16 / 24 / 32 / 40 / 48 / 64 / 80 / 96 / 128
