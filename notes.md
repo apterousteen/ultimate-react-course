@@ -1,3 +1,7 @@
+# Описание проектов
+
+03 - статичный сайт, базовые знания о компонентах, rendering list, props, jsx, styles, conditional rendering
+
 # React в браузере
 
 - песочница https://codesandbox.io/
@@ -394,4 +398,93 @@ return (
 </React.Fragment>
 ```
 
-// базовые знания о компонентах, rendering list, props, jsx, styles, conditional rendering
+# Event Listening - Слушание Событий
+
+Похоже на инлайн обработчики в HTML
+
+Необходимо именно написать функцию, а не вызвать, иначе она вызовется сразу при инициализации компонента
+
+```javascript
+<button className="previous" onClick={() => alert('prev')}>
+    Previous
+</button>
+
+// NOT LIKE THIS
+<button className="previous" onClick={alert('prev')}>
+    Previous
+</button>
+```
+
+```javascript
+const handlePrevious = () => {
+    step--;
+};
+
+<button className="previous" onClick={handlePrevious}>
+    Previous
+</button>
+```
+
+# State - Состояние
+
+— это данные, которые хранятся на протяжении жизненного цикла приложения
+
+- можно сказать, что это "память компонента"
+- "State variable" / "Piece of state" - отдельная переменная состояния в отдельно взятом компоненте
+- при изменении состояния, компонент перерендеривается
+- стоит относиться к state как к иммутабельной переменной
+
+! Все хуки можно вызывать только на верхнем уровне внутри компонента
+
+## Когда использовать state
+
+- для данных, которые должны сохраняться после перерисовки компонента
+- для динамических данных
+- для изменения вида компонента
+- НЕ надо использовать state для данных, которые не влияют на внешний вид компонента. Это негативно отразится на
+  производительности приложения (каждый раз будет перерендериваться)
+
+## useState()
+
+— это функция, который возвращает массив из 2 значений: текущее состояние и функция, меняющее это состояние
+
+```javascript
+const [step, setStep] = useState(1);
+```
+
+- Нельзя обновлять состояние вручную, тк это не поменяет его (если примитив), или bad practice
+
+```javascript
+const [test, setTest] = useState({name: 'Jonas'});
+
+function x() {
+    test.name = 'Nick'; // works, but bad practice
+
+    setTest({name: 'Nick'}); // correct way
+}
+```
+
+___
+
+setState не обновляет переменную дважды в одном коде.
+
+Для этого необходимо использовать updater function как коллбек
+внутри setState
+
+```javascript
+// Won't work
+const handlePrevious = () => {
+    if (step > 1) {
+        setStep(step - 1);
+        setStep(step - 1);
+    }
+};
+
+// Will work
+const handlePrevious = () => {
+    if (step > 1) {
+        setStep((s) => s - 1);
+        setStep((s) => s - 1);
+    }
+};
+```
