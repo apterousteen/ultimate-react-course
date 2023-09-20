@@ -1,6 +1,7 @@
 # Описание проектов
 
-03 - статичный сайт, базовые знания о компонентах, rendering list, props, jsx, styles, conditional rendering
+16.09.23: pizza-menu - статичный сайт, базовые знания о компонентах, rendering list, props, jsx, styles, conditional
+rendering
 
 # React в браузере
 
@@ -138,7 +139,8 @@ import "./index.css";
 - пропсы read-only (тк являются объектом. Если бы их можно было изменять, то они бы изменялись в родительском компоненте
   тоже)
 - могут быть изменены только в родительском компоненте
-- если кажется, что хочется изменить пропсы, то необходимо менять state
+- если кажется, что хочется изменить props, то необходимо менять state
+- при получении новых пропсов, компонент перерендеривается (обычно при перерисовке родительского компонента)
 
 ### Передача пропсов
 
@@ -434,7 +436,7 @@ const handlePrevious = () => {
 - при изменении состояния, компонент перерендеривается
 - стоит относиться к state как к иммутабельной переменной
 
-! Все хуки можно вызывать только на верхнем уровне внутри компонента
+❗ Все хуки можно вызывать только на верхнем уровне внутри компонента
 
 ## Когда использовать state
 
@@ -443,6 +445,10 @@ const handlePrevious = () => {
 - для изменения вида компонента
 - НЕ надо использовать state для данных, которые не влияют на внешний вид компонента. Это негативно отразится на
   производительности приложения (каждый раз будет перерендериваться)
+
+## Разница state и props
+
+![](notes_imgs/img_2.png)
 
 ## useState()
 
@@ -487,4 +493,156 @@ const handlePrevious = () => {
         setStep((s) => s - 1);
     }
 };
+```
+
+# Forms and Events - Формы и События
+
+## Как быстро создать много option для select
+
+Array.from({length: 20}) - создает массив из 20 пустых эл
+
+(_, i) - mapFn заполняет этот массив элементами option, в которых ключ, значение и текст от 1 до 20
+
+Итого у нас 20 элементов option от 1 до 20
+
+```javascript
+function Form() {
+    return (
+        <form className="add-form">
+            <h3>What do you need for your trip?</h3>
+            <select>
+                {Array.from({length: 20}, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                    </option>
+                ))}
+            </select>
+        </form>
+    );
+}
+```
+
+## onSubmit, обработка результатов формы
+
+Лучше цеплять обработчик именно на submit, а не на click по кнопке, тк, это включает в себя еще и нажатие enter
+
+Можно обрабатывать данные как в ванильном js
+
+❗для работы FormData у каждого поля должен быть атрибут name
+
+```javascript
+function Form() {
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        const dataArr = new FormData(e.target).entries();
+        const dataObj = Object.fromEntries(dataArr);
+
+        let {quantity, description} = dataObj;
+    };
+
+    return (
+        <form className="add-form" onSubmit={handleSubmit}>
+            // some code
+        </form>
+    );
+}
+```
+
+## Controlled Components
+
+В HTML элементы формы, такие как `<input>`, `<textarea>` и `<select>` сами управляют своим состоянием и
+обновляют его когда пользователь вводит данные.
+
+1. Создать state для каждого input
+
+```javascript
+function Form() {
+    const [description, setDescription] = useState('');
+    const [quantity, setQuantity] = useState(1);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        console.log({
+            id: 6,
+            description,
+            quantity,
+            packed: false,
+        });
+    };
+}
+```
+
+2. Добавить в каждый input value и обработчик на onChange, чтобы state обновлялся каждый раз при изменении формы
+
+❗Если не добавить обработчик, то с формой будет невозможно взаимодействовать
+
+```js
+  return (
+    <form className="add-form" onSubmit={handleSubmit}>
+        <select value={quantity} onChange={(e) => setQuantity(e.target.value)}>
+            {Array.from({length: 20}, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                    {i + 1}
+                </option>
+            ))}
+        </select>
+        <input
+            placeholder="item name..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+        />
+        // some code
+    </form>
+);
+```
+
+## Полезный кусок кода - форма
+
+```js
+function Form() {
+    const [description, setDescription] = useState('');
+    const [quantity, setQuantity] = useState(1);
+    const [placeholder, setPlaceholder] = useState('item name...');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        if (!description) {
+            setPlaceholder(`can't be empty!`);
+            return;
+        }
+
+        console.log({
+            id: 6,
+            description,
+            quantity,
+            packed: false,
+        });
+
+        setDescription('');
+        setQuantity(1);
+        setPlaceholder('item name...');
+    };
+
+    return (
+        <form className="add-form" onSubmit={handleSubmit}>
+            <h3>What do you need for your trip?</h3>
+            <select value={quantity} onChange={(e) => setQuantity(+e.target.value)}>
+                {Array.from({length: 20}, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                    </option>
+                ))}
+            </select>
+            <input
+                placeholder={placeholder}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+            />
+            <button>Add</button>
+        </form>
+    );
+}
 ```
