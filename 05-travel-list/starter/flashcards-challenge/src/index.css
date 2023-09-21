@@ -1,0 +1,48 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+    padding: 20px;
+    text-align: center;
+    user-select: none;
+}
+
+.flashcards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+.flashcards div {
+    border: 1px solid #e7e7e7;
+    background-color: #f7f7f7;
+    border-radius: 7px;
+    aspect-ratio: 2 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+div.selected {
+    border: 1px solid #2c59bd;
+    background-color: #6697ff;
+    color: #fff;
+}
+
+@media only screen and (max-width: 61.25em) {
+    .flashcards {
+        grid-template-columns: 1fr 1fr;
+        grid-auto-rows: minmax(10rem, auto);
+    }
+
+    .flashcards div {
+        aspect-ratio: unset;
+    }
+}
+
