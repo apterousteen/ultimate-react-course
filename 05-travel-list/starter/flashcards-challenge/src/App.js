@@ -19,7 +19,7 @@ const questions = [
   {
     id: 7336,
     question: 'What are the building blocks of React apps?',
-    answer: 'Components',
+    answer: 'components',
   },
   {
     id: 8832,
