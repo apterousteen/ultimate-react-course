@@ -75,6 +75,37 @@ root.render(
 );
 ```
 
+# Файл менеджмент
+
+Все компоненты лучше держать в папке src/components
+
+Один файл на один компонент
+
+В основном файле импортируются используемые компоненты
+
+```js
+import {useState} from 'react';
+import Logo from './Logo';
+import Form from './Form';
+import PackingList from './PackingList';
+import Stats from './Stats';
+
+export default function App() {
+    // code
+}
+```
+
+Остальные компоненты надо экспортировать
+
+```js
+import {useState} from 'react';
+import Item from './Item';
+
+export default function PackingList({props}) {
+    // code
+}
+```
+
 # Components - Компоненты
 
 У каждого компонента есть свои _date, logic and view_
@@ -551,8 +582,7 @@ function Form() {
 
 ## Controlled Components
 
-В HTML элементы формы, такие как `<input>`, `<textarea>` и `<select>` сами управляют своим состоянием и
-обновляют его когда пользователь вводит данные.
+Это компоненты (обычно элементы ввода), которые полностью синхронизированы со state
 
 1. Создать state для каждого input
 
@@ -643,6 +673,230 @@ function Form() {
             />
             <button>Add</button>
         </form>
+    );
+}
+```
+
+# State Management
+
+## Thinking in React
+
+Процесс разработки на React отличается от разработки на ванильном JS
+
+Основные шаги:
+
+1. Разделить UI на компоненты (нарисовать дерево компонентов?)
+2. Сверстать статическую часть
+3. Подумать о state
+    - Для чего использовать?
+    - Вид state (local, global)
+    - Куда поместить?
+4. Разобраться с data-flow
+    - One-way
+    - Child-to-parent communication
+    - Accessing global state
+
+## Local vs Global
+
+![](notes_imgs/img_3.png)
+
+## Когда и Как использовать state?
+
+![](notes_imgs/img_4.png)
+
+## Lifting state up - Подъём состояния
+
+Чтобы использовать один state между соседями, необходимо:
+
+1. переместить его в ближайшего предка компонентов
+2. переместить туда же функцию, управляющую этим состоянием
+3. передать управляющую функцию как props в компонент, где необходимо поменять состояние
+   есть конвенция в данном случае функцию-props называть **onSomeAction**
+4. передать state как props в компонент, где он необходим
+
+Это называется «подъём состояния»
+
+```js
+export default function App() {
+    // переместили в ближайшего предка
+    const [items, setItems] = useState([]);
+
+    // переместили функцию
+    const handleAddItems = (item) => {
+        setItems((items) => [...items, item]);
+    };
+
+    return (
+        <div className="app">
+            <Logo/>
+            // передали управляющую функцию onSomeAction
+            <Form onAddItems={handleAddItems}/>
+
+            // передали state
+            <PackingList items={items}/>
+            <Stats/>
+        </div>
+    );
+}
+```
+
+```js
+function Form({onAddItems}) {
+    const [description, setDescription] = useState('');
+    const [quantity, setQuantity] = useState(1);
+    const [placeholder, setPlaceholder] = useState('item name...');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        // code
+
+        const newItem = {
+            id: Date.now(),
+            description,
+            quantity,
+            packed: false,
+        };
+
+        // вызов управляющей функции-props
+        onAddItems(newItem);
+    };
+    // code
+}
+```
+
+```js
+function PackingList({items}) {
+    return (
+        <div className="list">
+            <ul>
+                {/* использование общего state */}
+                {items.map((item) => (
+                    <Item item={item} key={item.id}/>
+                ))}
+            </ul>
+        </div>
+    );
+}
+```
+
+# Derived State - производное (вычисляемое) состояние
+
+Это state, который может быть вычислен на основании другого state или props
+
+Для таких данных лучше использовать обычные переменные, они повлияют на компонент при перерисовке, вызванной изначальным
+state, от которого данные зависят
+
+Пример: вместо того, чтобы создавать новые state, просто считаем на основании существующего массива (state) items
+
+```js
+const itemsPacked = items.reduce((acc, i) => (i.packed ? acc + 1 : acc), 0);
+const itemsCount = items.length;
+```
+
+# Полезный кусок кода - сортировка и рендеринг
+
+```js
+function PackingList({items, onDeleteItem, onToggleItem}) {
+    // state используется в управляемом компоненте select
+    const [sortBy, setSortBy] = useState('input');
+
+    let sortedItems = [];
+
+    // копируем изначальный массив по условию
+    if (sortBy === 'input') sortedItems = items;
+
+    if (sortBy === 'description')
+        sortedItems = [...items].sort((a, b) =>
+            a.description.localeCompare(b.description)
+        );
+
+    if (sortBy === 'packed')
+        sortedItems = [...items].sort((a, b) => +a.packed - +b.packed);
+
+    return (
+        <div className="list">
+            <ul>
+                {/* рендерим отсортированную копию */}
+                {sortedItems.map((item) => (
+                    <Item
+                        item={item}
+                        key={item.id}
+                        onDeleteItem={onDeleteItem}
+                        onToggleItem={onToggleItem}
+                    />
+                ))}
+            </ul>
+
+            <div className="actions">
+                {/* управляемый компонент */}
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                    <option value="input">sort by input order</option>
+                    <option value="description">sort by description</option>
+                    <option value="packed">sort by packed status</option>
+                </select>
+                <button>clear list</button>
+            </div>
+        </div>
+    );
+}
+```
+
+# Полезный кусок кода - confirm
+
+Чтобы открылось браузерное диалоговое окно подтверждения, можно использовать window.confirm()
+Возвращает boolean
+
+```js
+const handleClearList = () => {
+    const confirmed = window.confirm(
+        'Are you sure you want to delete all items?'
+    );
+    if (confirmed) setItems([]);
+};
+```
+
+# Полезный кусок кода - аккордеон
+
+[Компонент аккордеон](05-travel-list/starter/accordion-challenge/src/App.js)
+
+# children Prop
+
+children содержит в себе JSX, заключенный между тегами компонента
+
+Частый сценарий для переиспользуемых компонентов
+
+Вместо того чтобы передавать кучу props, иногда лучше просто передать кусок верстки
+
+В примере ниже кнопки с разным направлением текста и иконки
+
+```js
+<Button bgColor="#7950f2" textColor="#fff" onClick={handlePrevious}>
+    <span>⬅</span>
+    Previous
+</Button>
+
+<Button bgColor="#7950f2" textColor="#fff" onClick={handleNext}>
+    Next
+    <span>➡</span>
+</Button>
+```
+
+# Полезный кусок кода - кнопка
+
+```js
+function Button({bgColor, textColor, onClick, children}) {
+    return (
+        <button
+            style={{
+                backgroundColor: bgColor,
+                color: textColor,
+            }}
+            onClick={onClick}
+        >
+            {/* props с содержимым тега */}
+            {children}
+        </button>
     );
 }
 ```
