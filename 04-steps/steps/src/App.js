@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 
 const messages = [
   'Learn React ⚛️',
@@ -7,7 +7,11 @@ const messages = [
 ];
 
 export default function App() {
-  return <Steps />;
+  return (
+      <>
+        <Steps/>
+      </>
+  );
 }
 
 function Steps() {
@@ -33,32 +37,54 @@ function Steps() {
   };
 
   return (
-    <>
-      <button className="close" onClick={handleOpen}>
-        {btnText}
+      <>
+        <button className="close" onClick={handleOpen}>
+          {btnText}
+        </button>
+        {isOpen && (
+            <div className="steps">
+              <div className="numbers">
+                <div className={step >= 1 ? 'active' : null}>1</div>
+                <div className={step >= 2 ? 'active' : null}>2</div>
+                <div className={step >= 3 ? 'active' : null}>3</div>
+              </div>
+
+              <StepMessage step={step}>{messages[step - 1]}</StepMessage>
+
+              <div className="buttons">
+                <Button bgColor="#7950f2" textColor="#fff" onClick={handlePrevious}>
+                  <span>⬅</span> Previous
+                </Button>
+
+                <Button bgColor="#7950f2" textColor="#fff" onClick={handleNext}>
+                  Next <span>➡</span>
+                </Button>
+              </div>
+            </div>
+        )}
+      </>
+  );
+}
+
+function Button({bgColor, textColor, onClick, children}) {
+  return (
+      <button
+          style={{
+            backgroundColor: bgColor,
+            color: textColor,
+          }}
+          onClick={onClick}
+      >
+        {children}
       </button>
-      {isOpen && (
-        <div className="steps">
-          <div className="numbers">
-            <div className={step >= 1 ? 'active' : null}>1</div>
-            <div className={step >= 2 ? 'active' : null}>2</div>
-            <div className={step >= 3 ? 'active' : null}>3</div>
-          </div>
+  );
+}
 
-          <p className="message">
-            Step {step}: {messages[step - 1]}
-          </p>
-
-          <div className="buttons">
-            <button className="previous" onClick={handlePrevious}>
-              Previous
-            </button>
-            <button className="next" onClick={handleNext}>
-              Next
-            </button>
-          </div>
-        </div>
-      )}
-    </>
+function StepMessage({step, children}) {
+  return (
+      <div className="message">
+        <h3>Step {step}:</h3>
+        {children}
+      </div>
   );
 }
