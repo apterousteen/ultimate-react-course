@@ -36,6 +36,9 @@ export default function App() {
 
   return (
     <div className="app">
+      <header>
+        <h1>Eat & Split</h1>
+      </header>
       <div className="sidebar">
         <FriendList
           friends={initialFriends}
