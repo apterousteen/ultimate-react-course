@@ -211,6 +211,7 @@ form h2 {
 
     .app {
         height: 100%;
+        width: 100vw;
         min-height: fit-content;
         grid-template-columns: auto;
         grid-template-areas:
