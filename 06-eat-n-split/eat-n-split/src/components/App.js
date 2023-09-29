@@ -1,37 +1,79 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import FriendList from './FriendList';
 import Button from './Button';
 import FormSplitBill from './FormSplitBill';
 import FormAddFriend from './FormAddFriend';
 
+const initialFriends = [
+  {
+    id: 118836,
+    name: 'Rodion',
+    balance: -156,
+  },
+  {
+    id: 933372,
+    name: 'May',
+    balance: 0,
+  },
+  {
+    id: 499476,
+    name: 'Nastya',
+    balance: 600,
+  },
+  {
+    id: 499768,
+    name: 'Ivan',
+    balance: 0,
+  },
+];
+
 export default function App() {
-  const [initialFriends, setInitialFriends] = useState([
-    {
-      id: 118836,
-      name: 'Clark',
-      balance: -7,
-    },
-    {
-      id: 933372,
-      name: 'Sarah',
-      balance: 20,
-    },
-    {
-      id: 499476,
-      name: 'Anthony',
-      balance: 0,
-    },
-  ]);
+  const [friendsList, setFriendsList] = useState(() => {
+    const saved = localStorage.getItem('friendsList');
+    return JSON.parse(saved) || initialFriends;
+  });
 
-  const [selectedFriendId, setSelectedFriendId] = useState(null);
+  useEffect(() => {
+    localStorage.setItem('friendsList', JSON.stringify(friendsList));
+  }, [friendsList]);
+
+  const [selectedFriend, setSelectedFriend] = useState(null);
   const [formAddIsOpen, setFormAddIsOpen] = useState(false);
-
-  const handleToggleFormSplit = (friendId) => {
-    setSelectedFriendId(selectedFriendId === friendId ? null : friendId);
-  };
 
   const handleToggleFormAdd = () => {
     setFormAddIsOpen((isOpen) => !isOpen);
+  };
+
+  const handleToggleSelection = (friend) => {
+    setSelectedFriend((selected) =>
+      selected?.id === friend.id ? null : friend
+    );
+  };
+
+  const handleAddFriend = (newFriend) => {
+    setFriendsList((friends) => [...friends, newFriend]);
+    setFormAddIsOpen(false);
+    setSelectedFriend(newFriend);
+  };
+
+  const handleSplitBill = (newBalance) => {
+    const newFriends = friendsList.map((f) =>
+      f.id === selectedFriend.id ? { ...f, balance: f.balance + newBalance } : f
+    );
+
+    setFriendsList(newFriends);
+    setSelectedFriend(null);
+  };
+
+  const handleDelete = (friend) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${friend.name}?`
+    );
+
+    if (confirmed) {
+      setSelectedFriend(null);
+      setFriendsList((friends) => friends.filter((f) => f.id !== friend.id));
+    }
   };
 
   return (
@@ -40,20 +82,27 @@ export default function App() {
         <h1>Eat & Split</h1>
       </header>
       <div className="sidebar">
-        <FriendList
-          friends={initialFriends}
-          selectedFriendId={selectedFriendId}
-          onToggleForm={handleToggleFormSplit}
-        />
-        {formAddIsOpen && <FormAddFriend />}
+        {friendsList.length > 0 && (
+          <FriendList
+            friends={friendsList}
+            selectedFriend={selectedFriend}
+            onToggleSelection={handleToggleSelection}
+            onDelete={handleDelete}
+          />
+        )}
+
+        {formAddIsOpen && <FormAddFriend onAddFriend={handleAddFriend} />}
+
         <Button onClick={handleToggleFormAdd}>
           {formAddIsOpen ? 'Close' : 'Add friend'}
         </Button>
       </div>
-      {selectedFriendId && (
+      {selectedFriend && (
         <FormSplitBill
-          selectedFriendId={selectedFriendId}
-          friends={initialFriends}
+          selectedFriend={selectedFriend}
+          friends={friendsList}
+          onSetFriends={setFriendsList}
+          onSplitBill={handleSplitBill}
         />
       )}
     </div>

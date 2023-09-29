@@ -1,6 +1,6 @@
-export default function Button({ onClick, children }) {
+export default function Button({ onClick, btnClass = '', children }) {
   return (
-    <button className="button" onClick={onClick}>
+    <button className={`button ${btnClass}`} onClick={onClick}>
       {children}
     </button>
   );

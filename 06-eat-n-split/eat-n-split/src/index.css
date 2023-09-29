@@ -20,23 +20,25 @@ html {
 }
 
 body {
-    height: 100vh;
+    height: 100%;
     color: #495057;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 }
 
 .app {
     min-height: 95vh;
+    height: 100%;
     display: grid;
-    grid-template-columns: 34rem 44rem;
+    grid-template-columns: 36rem 46rem;
     grid-template-rows: auto 1fr;
     gap: 4rem;
     align-items: start;
     grid-template-areas:
     "head head"
     "side form";
+    padding: 1.8rem 0 2.8rem 0;
 }
 
 .button {
@@ -92,7 +94,7 @@ h1 {
 
 .sidebar li {
     display: grid;
-    grid-template-columns: 4.8rem 1fr auto;
+    grid-template-columns: auto 4.8rem 1fr auto;
     align-items: center;
     column-gap: 1.6rem;
 
@@ -114,22 +116,36 @@ h1 {
 
 .sidebar li h3 {
     grid-row: 1;
-    grid-column: 2;
+    grid-column: 3;
 }
 
 .sidebar li p {
     grid-row: 2;
-    grid-column: 2;
+    grid-column: 3;
 }
 
 .sidebar li .button {
     grid-row: span 2;
-    grid-column: 3;
+    grid-column: 4;
+    min-width: 64px;
+}
+
+.sidebar li .btn-delete {
+    grid-column: 1;
+    min-width: unset;
+    width: fit-content;
+    background-color: unset;
+    padding: 0;
+    font-weight: bold;
+    font-size: 2.2rem;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
 .sidebar > .button {
     float: right;
     margin-right: 1.2rem;
+    min-width: 64px;
 }
 
 .green {
@@ -160,6 +176,10 @@ form {
 .form-split-bill {
     grid-template-columns: 1fr 12rem;
     padding: 3.2rem 4rem;
+}
+
+.form-split-bill .error-msg {
+    color: #e03131;
 }
 
 label {
@@ -204,11 +224,6 @@ form h2 {
 }
 
 @media only screen and (max-width: 61.25em) {
-    body {
-        height: 100%;
-        align-items: flex-start;
-    }
-
     .app {
         height: 100%;
         width: 100vw;
@@ -220,18 +235,22 @@ form h2 {
                 "form";
     }
 
+    header {
+        margin: 0 1.8rem;
+    }
+
     .sidebar {
+        margin: 0;
         padding: 0 2.8rem;
     }
 
-    header {
-        margin: 1.8rem;
-        margin-bottom: 0;
+    .sidebar li {
+        column-gap: 1.1rem;
+        padding-left: 0.6rem;
     }
 
     .form-split-bill {
         padding: 2.4rem;
-        margin: 2.8rem;
-        margin-top: 0;
+        margin: 0 2.8rem;
     }
 }

@@ -2,16 +2,18 @@ import Friend from './Friend';
 
 export default function FriendList({
   friends,
-  selectedFriendId,
-  onToggleForm,
+  selectedFriend,
+  onToggleSelection,
+  onDelete,
 }) {
   return (
     <ul>
       {friends.map((friend) => (
         <Friend
           friend={friend}
-          selectedFriendId={selectedFriendId}
-          onToggleForm={() => onToggleForm(friend.id)}
+          selectedFriend={selectedFriend}
+          onToggleSelection={() => onToggleSelection(friend)}
+          onDelete={onDelete}
           key={friend.id}
         />
       ))}
