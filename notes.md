@@ -1,7 +1,11 @@
 # Описание проектов
 
-16.09.23: pizza-menu - статичный сайт, базовые знания о компонентах, rendering list, props, jsx, styles, conditional
-rendering
+- [x] 16.09.23: pizza-menu - статичный сайт, базовые знания о компонентах, rendering list, props, jsx, styles,
+  conditional rendering
+- [x] 24.09.23: travel list
+- [x] 29.09.23: eat-n-split
+- [ ] reusable star component?
+- [ ] usePopcorn - children prop, component composition, Prop Drilling, reusable component, propsTypes,
 
 # React в браузере
 
@@ -222,6 +226,16 @@ function Pizza({pizzaObj}) {
                 <span>{pizzaObj.price} €</span>
             </div>
         </li>
+    );
+}
+```
+
+Можно задать начальное значение (default value)
+
+```js
+export default function Message({msg = 'Hello World'}) {
+    return (
+        <p>{msg}</p>
     );
 }
 ```
@@ -897,6 +911,115 @@ function Button({bgColor, textColor, onClick, children}) {
             {/* props с содержимым тега */}
             {children}
         </button>
+    );
+}
+```
+
+# Способы сгенерить рандомный ID
+
+```js
+Date.now();
+
+crypto.randomUUID(); // браузерная функция
+```
+
+# Thinking in React
+
+## Когда и как разделить на компоненты
+
+Можно начать с относительно крупного компонента, потом разделить его на части, если необходимо. Когда необходимо?
+
+1. Вместе ли с точки зрения верстки
+2. Можно ли переиспользовать?
+3. Есть ли отдельная логика?
+4. Слишком много обязательств (слишком много пропсов или state)
+
+## Виды компонентов
+
+![component categories](notes_imgs/img_5.png)
+
+# Prop Drilling
+
+Prop Drilling — передача пропсов на множество уровней вниз, где промежуточные компоненты не нуждаются в них.
+
+При прокидывании пропсов вглубь, каждый из компонентов на пути перерендеривается - минус оптимизация
+
+## Component Composition
+
+### children prop
+
+Одно из решений prop drilling - использование children prop
+
+```js
+// Так:
+<Main>
+    <SearchResultsBox>
+        <MovieList movies={movies}/>
+    </SearchResultsBox>
+
+    <WatchedBox/>
+</Main>
+```
+
+```js
+// Не так:
+<Main movies={movies}/>
+
+function Main({movies}) {
+    return (
+        <main className="main">
+            {/*prop goes deeper*/}
+            <SearchResults movies={movies}/>
+            <WatchedBox/>
+        </main>
+    );
+}
+```
+
+### Component as a prop
+
+```js
+// with children prop
+<Container>
+    <MovieList movies={movies}/>
+</Container>
+
+
+// as a usual prop
+<Container element={<MovieList movies={movies}/>}/>
+```
+
+# Prop Types
+
+— PropTypes экспортирует ряд валидаторов, используемые для того, чтобы убедиться, что входные данные нужного типа.
+Запускается в рантайме, ошибка будет в браузере, а не во время сборки
+
+```js
+import PropTypes from 'prop-types';
+
+StarRating.propTypes = {
+    maxRating: PropTypes.number.isRequired,
+    defaultRating: PropTypes.number,
+    color: PropTypes.string,
+    fontSize: PropTypes.string,
+    starSize: PropTypes.number,
+    messages: PropTypes.array,
+    className: PropTypes.string,
+    onSetRating: PropTypes.func,
+};
+```
+
+# Reusable Star Component
+
+```js
+function RatingDisplay() {
+    const [movieRating, setMovieRating] = useState(0);
+
+    return (
+        <div>
+            <StarRating color="blue" maxRating={10} onSetRating={setMovieRating}/>
+            {movieRating > 0 && <p>This movie was rated {movieRating} stars</p>}
+        </div>
     );
 }
 ```
