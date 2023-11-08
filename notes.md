@@ -1365,3 +1365,124 @@ preventDefault() и stopPropagation()
 ![](./notes_imgs/img_37.png)
 ![](./notes_imgs/img_38.png)
 ![](./notes_imgs/img_39.png)
+
+# Component (instance) lifecycle - жизненный цикл компонента
+
+1. Mount / Initial Render - когда компонент рендерится в самый первый раз, создаются новые state и props
+2. Re-render - происходит, когда меняются props, state, рендерится родитель,меняется контекст
+3. Unmount - когда компонент убирается в экрана, удаляются state и props
+
+![](./notes_imgs/img_40.png)
+
+# Fetch in Components
+
+Использование async/await в top-level коде невозможно и будет ошибка, тк рендеринг синхронная операция
+
+Если использовать then и попытаться задать state, это приведет к **бесконечному числу** реквестов,
+
+компонент рендерится -> fetch() -> меняется state -> компонент рендерится -> fetch()....
+
+```js
+export default function App() {
+    const [movies, setMovies] = useState([]);
+    const [watched, setWatched] = useState(tempWatchedData);
+
+    // ошибочный код
+    fetch(`${API_URL}&s=matrix`)
+        .then((res) => res.json())
+        .then((data) => setMovies(data.Search));
+
+    // more code
+}
+```
+
+Поэтому правильно делать запросы внутри [useEffect](#useeffect)
+
+```js
+export default function App() {
+    const [movies, setMovies] = useState([]);
+    const [watched, setWatched] = useState(tempWatchedData);
+
+    // правильный код
+    useEffect(() => {
+        fetch(`${API_URL}&s=matrix`)
+            .then((res) => res.json())
+            .then((data) => setMovies(data.Search));
+    }, []);
+
+
+    // правильный код с async/await
+    useEffect(() => {
+        const fetchMovies = async () => {
+            const res = await fetch(`${API_URL} & s = matrix`);
+            const data = await res.json();
+            setMovies(data.Search);
+        };
+
+        fetchMovies();
+    }, []);
+
+    // more code
+}
+```
+
+# Side Effects
+
+**side effect** - это взаимодействие React с внешним миром, например, запросы, подписки, таймеры, ручной доступ к DOM (
+document.title и тд)
+
+![](./notes_imgs/img_41.png)
+
+Можно создавать побочные эффекты в 2 разных случаях:
+
+1. Внутри event handlers - реакция на события
+2. Внутри useEffect - реакция на рендеринг
+
+## Разница event handler и useEffect
+
+![](./notes_imgs/img_42.png)
+
+ЛУЧШЕ пользоваться event handler'ами для создания side effects
+
+# useEffect
+
+**useEffect** - это хук, позволяющий синхронизировать компонент с внешними системами (зависимостями).
+
+Позволяет работать с [Side Effects](#side-effects) и привязаться к определенной стадии жизненного цикла компонента
+
+Принимает 2 параметра
+
+1. коллбек, в котором выполняются побочные эффекты, вызывается после браузерной ОТРИСОВКИ
+2. массив зависимостей (с пустым массивом ф-ция будет вызываться при каждом рендере компонента)
+
+3. **коллбек не может быть асинхронной функцией**, так что async/await можно использовать только внутри него
+
+## Примеры
+
+Запрос к API .then
+
+```js
+const [movies, setMovies] = useState([]);
+
+useEffect(() => {
+    fetch(`${API_URL}&s=matrix`)
+        .then((res) => res.json())
+        .then((data) => setMovies(data));
+}, []);
+```
+
+Запрос к API async/await
+
+```js
+const [movies, setMovies] = useState([]);
+
+useEffect(() => {
+    const fetchMovies = async () => {
+        const res = await fetch(`${API_URL}&s=matrix`);
+        const data = await res.json();
+        setMovies(data.Search);
+    };
+
+    fetchMovies();
+}, []);
+```
