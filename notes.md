@@ -4,8 +4,10 @@
   conditional rendering
 - [x] 24.09.23: travel list
 - [x] 29.09.23: eat-n-split
-- [ ] reusable star component?
-- [ ] usePopcorn - children prop, component composition, Prop Drilling, reusable component, propsTypes,
+- [x] reusable star component?
+- [ ] usePopcorn - children prop, component composition, Prop Drilling, reusable component, propsTypes, useEffect,
+  fetch, debouncer, обработка битых изображений, изменение title use eff, abortion controller, esc keydown event
+  listener (глобально слушаем события, подписываемся, отписываемся)
 
 # React в браузере
 
@@ -1426,6 +1428,8 @@ export default function App() {
 }
 ```
 
+fetch также можно прервать с помощью [Abortion Controller](#abortion-controller)
+
 # Side Effects
 
 **side effect** - это взаимодействие React с внешним миром, например, запросы, подписки, таймеры, ручной доступ к DOM (
@@ -1450,12 +1454,31 @@ document.title и тд)
 
 Позволяет работать с [Side Effects](#side-effects) и привязаться к определенной стадии жизненного цикла компонента
 
+КАЖДЫЙ ЭФФЕКТ ДОЛЖЕН ДЕЛАТЬ 1 ВЕЩЬ
+
+Можно сказать, это как event listener, слушающий изменения зависимостей
+
 Принимает 2 параметра
 
 1. коллбек, в котором выполняются побочные эффекты, вызывается после браузерной ОТРИСОВКИ
-2. массив зависимостей (с пустым массивом ф-ция будет вызываться при каждом рендере компонента)
+2. массив зависимостей, props или state (с пустым массивом ф-ция будет вызываться при каждом рендере компонента)
 
-3. **коллбек не может быть асинхронной функцией**, так что async/await можно использовать только внутри него
+**коллбек не может быть асинхронной функцией**, так что async/await можно использовать только внутри него
+
+## Как работает в жизненном цикле
+
+1. меняется зависимость
+2. рендер
+3. коммит
+4. перерисовка
+3. вызывается функция-эффект
+3. еще рендер, коммит, перерисовка
+
+![](./notes_imgs/img_43.png)
+
+Чтобы сделать что-либо ДО того, как браузер начнет рисовать, надо использовать useLayoutEffect
+
+![](./notes_imgs/img_44.png)
 
 ## Примеры
 
@@ -1485,4 +1508,228 @@ useEffect(() => {
 
     fetchMovies();
 }, []);
+```
+
+# Error Handling - Обработка ошибок - полезный кусок кода
+
+```js
+export default function App() {
+    const [movies, setMovies] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // отдельный state для ошибок
+    // ниже еще отдельный компонент
+    const [errorMsg, setErrorMsg] = useState('');
+
+    useEffect(() => {
+        const fetchMovies = async () => {
+            // оборачиваем в try/catch
+            try {
+                setIsLoading(true);
+
+                // при каждом новом запросе обнуляем state
+                setErrorMsg('');
+                const res = await fetch(`${API_URL}&s=${query}`);
+
+                // обработка
+                if (!res.ok) throw new Error('Something went wrong');
+
+                const data = await res.json();
+
+                // обработка
+                if (data.Error) throw new Error(data.Error);
+
+                setMovies(data.Search);
+            } catch (e) {
+                console.error(e.message);
+                // обновляем state
+                setErrorMsg(e.message);
+                setMovies([]);
+            } finally {
+                // при любом исходе прекращаем загрузку
+                setIsLoading(false);
+            }
+        };
+
+        fetchMovies();
+    }, [query]);
+
+    return (
+        <Container>
+            {/*условный рендеринг на все случаи*/}
+            {isLoading && <Loader/>}
+            {!isLoading && !errorMsg && <MovieList movies={movies}/>}
+            {errorMsg && <ErrorMsg message={errorMsg}/>}
+        </Container>
+    );
+}
+```
+
+# Debouncer - отложенный поиск - полезный кусок кода
+
+```js
+useEffect(() => {
+    const fetchMovies = async () => {
+        try {
+            setIsLoading(true);
+            setErrorMsg('');
+            const res = await fetch(`${API_URL}&s=${query}`);
+
+            if (!res.ok) throw new Error('Something went wrong');
+
+            const data = await res.json();
+
+            if (data.Error) throw new Error(data.Error);
+
+            setMovies(data.Search);
+        } catch (e) {
+            console.error(e.message);
+            setErrorMsg(e.message);
+            setMovies([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (query.length < 3) {
+        setMovies([]);
+        setErrorMsg('');
+        return;
+    }
+
+    // fetch after 600 ms after typing
+    const delayDebounce = setTimeout(() => {
+        console.log(query);
+        fetchMovies();
+    }, 600);
+
+    // cleanup function
+    return () => clearTimeout(delayDebounce);
+}, [query]);
+```
+
+# Cleaning up in useEffect
+
+cleanup function - это функция, которую возвращает useEffect, используется для сброса эффекта, вызывается, когда
+компонент размонтируется (unmount) и при ре-рендере (перед новым эффектом)
+
+В примере выше cleanup функция обнуляет таймаут каждый раз, перед тем, как вызывается эффект (когда меняется query)
+
+![](./notes_imgs/img_45.png)
+
+## Closure in cleanup function
+
+Несмотря на то, что ф-ция вызывается уже после исчезновения компонента, она имеет доступ к переменным этого компонента
+
+```js
+useEffect(() => {
+    if (!title) return;
+
+    document.title = `usePopcorn // ${title}`;
+
+    // cleanup function
+    return () => {
+        document.title = `usePopcorn // movie tracker`
+
+        // title !== undefined
+        console.log(`Cleaning up after ${title}`)
+    };
+}, [title]);
+```
+
+## Варианты использования:
+
+- чтобы зачистить предыдущий запрос - [Abortion Controller ](#abortion-controller)
+- чтобы обнулить таймер
+- чтобы убрать обработчик события
+
+# Abortion Controller
+
+AbortionController - это встроенный объект для отмены не только fetch, но и других асинхронных задач.
+
+## Зачем?
+
+Чтобы не было Состояния гонки (Race condition) между запросами, тк это состояние:
+
+- ухудшает производительность
+- может вызвать рендер неактуальных данных, если последним придет не нужный нам ответ
+
+## Как использовать
+
+1. Создать экземпляр объекта контроллера вне async fetch функции с помощью ```new AbortionController()```
+2. Добавить свойство ```signal``` в fetch options
+3. В cleanup function вызвать ```controller.abort()``` - это прерывает предыдущий реквест при ре-рендере. В итоге
+   остается только последний реквест
+4. Исключаем ошибку типа ```AbortionError```
+5. Зачищаем ошибку в state
+
+### Пример - использование AbortionController в fetch - полезный кусок кода
+
+```js
+useEffect(() => {
+    // 1. создаем контроллер вне fetch функции
+    const controller = new AbortController();
+
+    const fetchMovieDetailsUsingId = async () => {
+        try {
+            setIsLoading(true);
+            setErrorMsg('');
+            const res = await fetch(`${API_URL}&i=${selectedId}`, {
+                // 2. добавляем сигнал в fetch options
+                signal: controller.signal,
+            });
+
+            if (!res.ok) throw new Error('Something went wrong');
+
+            const data = await res.json();
+
+            if (data.Error) throw new Error(data.Error);
+
+            setMovie(data);
+
+            // 5. зачищаем ошибку в state
+            setErrorMsg('');
+        } catch (e) {
+            // 4. обрабатываем ошибку только если это не AbortError
+            if (e.name !== 'AbortError') setErrorMsg(e.message);
+            setMovie({});
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (!selectedId) {
+        return;
+    }
+
+    fetchMovieDetailsUsingId();
+
+    return () => {
+        // 3. в cleanup функции прерываем предыдущий запрос при ре-рендере
+        controller.abort();
+    };
+}, [selectedId]);
+```
+
+# event listeners in useEffect - полезный кусок кода
+
+Для слушания событий необходим useEffect
+
+Чтобы не увеличивать кол-во слушателей при ре-рендере, в cleanup функции надо
+отписываться от этого события
+
+```js
+useEffect(() => {
+    const handleKeydownEsc = (e) => {
+        if (e.key === 'Escape') {
+            onCloseMovie();
+        }
+    };
+
+    document.addEventListener('keydown', handleKeydownEsc);
+
+    return () => {
+        document.removeEventListener('keydown', handleKeydownEsc);
+    };
+}, [onCloseMovie]);
 ```
