@@ -1984,3 +1984,38 @@ export function useLocalStorage(localStorageKey, defaultValue) {
 ```js
   const [watched, setWatched] = useLocalStorage('watchedMovies', []);
 ```
+
+# ГорячАЯ клавишА (хук) - полезный кусок кода
+
+```js
+import {useEffect} from 'react';
+
+export function useShortcutKey(key = '', actionCallback = () => null) {
+    useEffect(() => {
+        const handleKeydown = (e) => {
+            if (e.key.toLowerCase() === key.toLowerCase()) {
+                actionCallback();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeydown);
+
+        return () => {
+            document.removeEventListener('keydown', handleKeydown);
+        };
+    }, [actionCallback, key]);
+}
+
+```
+
+Использование при наличии и отсутствии функции действия:
+
+```js
+useShortcutKey('Escape', onCloseMovie);
+```
+
+```js
+useShortcutKey('Enter', () => {
+    searchField.current.focus();
+});
+```
