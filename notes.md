@@ -1959,3 +1959,28 @@ const handleCloseMovie = useCallback(() => {
     setSelectedId(null);
 }, []);
 ```
+
+# Сохранение в localStorage (хук) - полезный кусок кода
+
+```js
+import {useEffect, useState} from 'react';
+
+export function useLocalStorage(localStorageKey, defaultValue) {
+    const [value, setValue] = useState(() => {
+        const stored = localStorage.getItem(localStorageKey);
+        return JSON.parse(stored) || defaultValue;
+    });
+
+    useEffect(() => {
+        localStorage.setItem(localStorageKey, JSON.stringify(value));
+    }, [value, localStorageKey]);
+
+    return [value, setValue];
+}
+```
+
+Использование:
+
+```js
+  const [watched, setWatched] = useLocalStorage('watchedMovies', []);
+```
