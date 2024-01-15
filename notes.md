@@ -1932,3 +1932,30 @@ let isMobile = window.matchMedia('only screen and (max-width: 61.25em)').matches
 - Может получать и возвращать значения (обычно [] или {})
 
 ![](notes_imgs/img_50.png)
+
+## Как использовать
+
+1. Создать отдельный файл с названием хука
+2. Перенести внутрь все связанные state
+3. Прокинуть нужные аргументы (коллбеки, которые будут использоваться в useEffect, надо оборачивать в useCallback!)
+3. Реализовать логику
+4. Вернуть необходимые значения
+5. Вызвать хук в другом месте в коде
+
+```js
+const handleCloseMovie = useCallback(() => {
+    setSelectedId(null);
+}, []);
+
+const [movies, isLoading, errorMsg] = useMovies(query, handleCloseMovie);
+```
+
+# useCallback
+
+Хук, позволяющий кэшировать объявление функции между рендерами
+
+```js
+const handleCloseMovie = useCallback(() => {
+    setSelectedId(null);
+}, []);
+```
