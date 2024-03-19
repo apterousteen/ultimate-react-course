@@ -2019,3 +2019,137 @@ useShortcutKey('Enter', () => {
     searchField.current.focus();
 });
 ```
+
+# useReducer
+
+useReducer - это хук для работы с состоянием компонента. Он используется под капотом у хука useState.
+
+## Синтаксис и принцип работы
+
+![](./notes_imgs/img_51.png)
+![](./notes_imgs/img_52.png)
+
+## Пример из жизни для аналогии
+
+![](./notes_imgs/img_53.png)
+
+## Использование для 1 state
+
+1. Вызвать useReducer в компоненте
+
+    ```js
+    // const [count, setCount] = useState(0);
+    const [count, dispatch] = useReducer(reducer, 0);
+    ```
+
+2. Написать reducer функцию **ВНЕ изначального компонента**.
+
+   Она принимает актуальный state и action. В зависимости от действия меняет state. Обычно
+   используют switch-case, но можно if
+
+    ```js
+    const reducer = (curState, action) => {
+        if (action.type === 'dec') return curState - 1;
+        if (action.type === 'inc') return curState + 1;
+        if (action.type === 'setCount') return action.payload;
+    };
+    ```
+3. Вызвать dispatch внутри обработчика.
+
+   dispatch принимает объект с обязательным type и необязательным payload (какие-то данные, которые могут быть
+   использованы для изменения state)
+
+    ```js
+    const dec = function () {
+        // setCount((count) => count - 1);
+        dispatch({type: 'dec'});
+    };
+    
+    const inc = function () {
+        // setCount((count) => count + 1);
+        dispatch({type: 'inc'});
+    };
+    
+    const defineCount = function (e) {
+        // setCount(Number(e.target.value));
+        dispatch({type: 'setCount', payload: +e.target.value});
+    };
+    ```
+
+## Использование для нескольких связанных state
+
+1. Вне компонента создать начальный state и написать reducer функцию
+   Когда действий много, то лучше использовать switch/case. И возвращать объект такой же структуры как начальный state,
+   для этого надо его распаковать, а потом переписать нужное свойство
+
+```js
+const initialState = {
+    count: 0,
+    step: 1,
+};
+
+const reducer = (state, action) => {
+    switch (action.type) {
+        case 'dec': {
+            // распаковали state и переписали count
+            return {
+                ...state,
+                count: state.count - state.step,
+            };
+        }
+        case 'inc': {
+            return {
+                ...state,
+                count: state.count + state.step,
+            };
+        }
+        case 'setCount': {
+            return {
+                ...state,
+                count: action.payload,
+            };
+        }
+        case 'setStep': {
+            return {
+                ...state,
+                step: action.payload,
+            };
+        }
+        case 'reset': {
+            return initialState;
+        }
+        default: {
+            throw new Error(`Unknown action: ${action.type}`);
+        }
+    }
+};
+```
+
+2. Внутри компонента вызвать useReducer и деструктурировать отдельные state
+
+```js
+const [state, dispatch] = useReducer(reducer, initialState);
+const {count, step} = state;
+```
+
+3. Вызвать dispatch внутри обработчиков.
+
+   dispatch принимает объект с обязательным type и необязательным payload (какие-то данные, которые могут быть
+   использованы для изменения state)
+
+```js
+const inc = function () {
+    // setCount((count) => count + step);
+    dispatch({type: 'inc'});
+};
+
+const defineCount = function (e) {
+    // setCount(Number(e.target.value));
+    dispatch({type: 'setCount', payload: +e.target.value});
+};
+
+const defineStep = function (e) {
+    // setStep(Number(e.target.value));
+    dispatch({type: 'setStep', payload: +e.target.value});
+};
+```
